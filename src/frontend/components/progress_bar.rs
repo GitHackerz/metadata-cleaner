@@ -1,7 +1,7 @@
 use iced::widget::{container, progress_bar, text, column};
 use iced::{Element, Length};
 
-pub fn view<'a, Message>(
+pub fn view<'a, Message: 'a>(
     progress: f32,
     status_text: &str,
 ) -> Element<'a, Message> {

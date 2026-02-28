@@ -14,7 +14,22 @@ pub fn init() {
                 record.args()
             )
         })
-        .filter(None, LevelFilter::Info)
+        // Our crates at INFO
+        .filter_module("metadata_cleaner", LevelFilter::Info)
+        // Silence chatty third-party internals
+        .filter_module("wgpu",            LevelFilter::Warn)
+        .filter_module("wgpu_core",       LevelFilter::Warn)
+        .filter_module("wgpu_hal",        LevelFilter::Warn)
+        .filter_module("naga",            LevelFilter::Warn)
+        .filter_module("iced",            LevelFilter::Warn)
+        .filter_module("iced_wgpu",       LevelFilter::Warn)
+        .filter_module("iced_winit",      LevelFilter::Warn)
+        .filter_module("zbus",            LevelFilter::Warn)
+        .filter_module("ashpd",           LevelFilter::Warn)
+        .filter_module("tracing",         LevelFilter::Warn)
+        // Fall-back for everything else: WARN
+        .filter(None, LevelFilter::Warn)
         .target(Target::Stdout)
         .init();
 }
+

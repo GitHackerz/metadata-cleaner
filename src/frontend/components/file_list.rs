@@ -1,4 +1,4 @@
-use iced::widget::{column, row, text, scrollable, container, button};
+use iced::widget::{column, row, text, scrollable, button};
 use iced::{Element, Length, Color};
 use crate::backend::models::{FileRecord, FileStatus};
 
@@ -25,7 +25,7 @@ pub fn view<'a>(
             let row_content = row![
                 text(&file.path).width(Length::FillPortion(3)).size(14),
                 text(&file.file_type).width(Length::FillPortion(1)).size(14),
-                text(format!("{:?}", file.status)).style(status_color).width(Length::FillPortion(1)).size(14),
+                text(format!("{:?}", file.status)).style(iced::theme::Text::Color(status_color)).width(Length::FillPortion(1)).size(14),
             ]
             .spacing(10)
             .padding(5);
@@ -35,7 +35,7 @@ pub fn view<'a>(
                 .style(if is_selected { iced::theme::Button::Primary } else { iced::theme::Button::Secondary })
                 .width(Length::Fill)
                 .into()
-        }).collect()
+        }).collect::<Vec<_>>()
     )
     .spacing(2);
 

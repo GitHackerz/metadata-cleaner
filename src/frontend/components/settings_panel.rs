@@ -1,5 +1,5 @@
 use iced::widget::{column, row, text, checkbox, container, pick_list};
-use iced::{Element, Length};
+use iced::{Element};
 use crate::backend::models::UserPreferences;
 
 #[derive(Debug, Clone)]

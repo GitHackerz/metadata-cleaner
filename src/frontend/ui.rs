@@ -1,8 +1,8 @@
-use iced::widget::{container, text, button, scrollable};
-use iced::{Element, Length, Theme, Color, Background};
+use iced::widget::{container, text, button};
+use iced::{Element, Length, Theme, Background};
 use iced::theme;
 
-pub fn header<'a, Message>(title: &str) -> Element<'a, Message> {
+pub fn header<'a, Message: 'a>(title: &str) -> Element<'a, Message> {
     container(
         text(title)
             .size(20)

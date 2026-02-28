@@ -1,0 +1,87 @@
+# =============================================================================
+# Metadata Cleaner — Docker Compose
+#
+# Services
+# --------
+#   test   Run the full unit-test suite (no display needed)
+#   app    Run the GUI application (requires host X11)
+#
+# Quick-start
+# -----------
+#   # 1. Allow the Docker daemon to connect to your X display (host only)
+#   xhost +local:docker
+#
+#   # 2. Run tests
+#   docker compose run --rm test
+#
+#   # 3. Launch the GUI app
+#   docker compose up app
+#
+#   # 4. Revoke X11 access when done
+#   xhost -local:docker
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # test — cargo test --all
+  # ---------------------------------------------------------------------------
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test          # stops at the "test" stage
+    image: metadata-cleaner:test
+    container_name: metadata-cleaner-test
+    environment:
+      RUST_BACKTRACE: "1"
+      RUST_LOG: "warn"
+    # Override CMD to also print a clear pass/fail summary
+    command: >
+      cargo test --all --color always -- --test-threads=1
+    volumes:
+      # Mount source so you can re-run tests after editing without rebuilding
+      - ./src:/build/src:ro
+      - ./Cargo.toml:/build/Cargo.toml:ro
+    # Exit with the test process's exit code so CI can gate on it
+    profiles: []             # always available
+
+  # ---------------------------------------------------------------------------
+  # app — the GUI desktop application
+  #
+  # The host X11 socket is mounted inside the container.
+  # Run `xhost +local:docker` on the host before starting this service.
+  # ---------------------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime        # full release build
+    image: metadata-cleaner:latest
+    container_name: metadata-cleaner-app
+    environment:
+      # Forward the host DISPLAY variable (e.g. :0) into the container.
+      # Override on the command line: DISPLAY=:1 docker compose up app
+      DISPLAY: "${DISPLAY:-:0}"
+      RUST_LOG: "info"
+      # Use the local X authority file if present
+      XAUTHORITY: "/tmp/.Xauthority"
+    volumes:
+      # X11 socket — required for the GUI window
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # Optional: persist the SQLite database across container restarts
+      - metadata-cleaner-data:/home/appuser/.local/share
+      # Optional: pass through the host X authority file
+      - "${XAUTHORITY:-/dev/null}:/tmp/.Xauthority:ro"
+    # The container should not try to run detached:
+    # the GUI event loop occupies the foreground process.
+    stdin_open: false
+    tty: false
+    restart: "no"
+
+# ---------------------------------------------------------------------------
+# Named volumes
+# ---------------------------------------------------------------------------
+volumes:
+  metadata-cleaner-data:
+    driver: local

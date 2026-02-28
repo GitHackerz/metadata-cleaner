@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Local};
-use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScanRecord {
@@ -56,3 +55,65 @@ impl Default for UserPreferences {
         }
     }
 }
+
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn user_preferences_default_values() {
+        let prefs = UserPreferences::default();
+        assert!(prefs.recursive_default);
+        assert!(prefs.backup_enabled);
+        assert_eq!(prefs.theme, "dark");
+        assert!(prefs.last_scan_path.is_none());
+    }
+
+    #[test]
+    fn scan_status_serialization_round_trip() {
+        let statuses = vec![
+            ScanStatus::InProgress,
+            ScanStatus::Completed,
+            ScanStatus::Failed("Some error".into()),
+        ];
+        for status in statuses {
+            let json = serde_json::to_string(&status).expect("serialize");
+            let back: ScanStatus = serde_json::from_str(&json).expect("deserialize");
+            assert_eq!(status, back);
+        }
+    }
+
+    #[test]
+    fn file_status_serialization_round_trip() {
+        let statuses = vec![
+            FileStatus::Scanned,
+            FileStatus::Cleaned,
+            FileStatus::Error("io error".into()),
+            FileStatus::Skipped,
+        ];
+        for status in statuses {
+            let json = serde_json::to_string(&status).expect("serialize");
+            let back: FileStatus = serde_json::from_str(&json).expect("deserialize");
+            assert_eq!(status, back);
+        }
+    }
+
+    #[test]
+    fn file_record_serializes_with_no_metadata() {
+        let rec = FileRecord {
+            id: "abc".into(),
+            scan_id: "scan1".into(),
+            path: "/tmp/photo.jpg".into(),
+            file_type: "jpg".into(),
+            metadata: None,
+            status: FileStatus::Scanned,
+        };
+        let json = serde_json::to_string(&rec).expect("serialize");
+        assert!(json.contains("\"metadata\":null"));
+    }
+}
+

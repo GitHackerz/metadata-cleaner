@@ -1,0 +1,28 @@
+# Rust build artefacts — these are large and rebuilt inside the container
+target/
+
+# Version control
+.git/
+.gitignore
+
+# IDE / editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# CI artefacts
+.github/
+
+# Container files (don't copy into themselves)
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

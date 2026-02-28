@@ -1,5 +1,4 @@
 use std::process::Command;
-use std::path::Path;
 use serde_json::Value;
 use anyhow::{Result, anyhow};
 use std::fs;
@@ -15,6 +14,7 @@ impl ExifTool {
             .unwrap_or(false)
     }
 
+    #[allow(dead_code)]
     pub fn get_metadata(path: &str) -> Result<Value> {
         let output = Command::new("exiftool")
             .arg("-j") // JSON output
@@ -52,10 +52,7 @@ impl ExifTool {
     }
 
     pub fn create_backup(path: &str) -> Result<String> {
-        let path_obj = Path::new(path);
-        let ext = path_obj.extension().and_then(|e| e.to_str()).unwrap_or("");
         let backup_path = format!("{}.original", path);
-        
         fs::copy(path, &backup_path)?;
         Ok(backup_path)
     }
