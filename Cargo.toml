@@ -2,6 +2,13 @@
 name = "metadata-cleaner"
 version = "0.1.0"
 edition = "2021"
+description = "A cross-platform desktop application to scan and clean metadata from files using ExifTool"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
+repository = "https://github.com/YOUR_USERNAME/metadata-cleaner"
+homepage = "https://github.com/YOUR_USERNAME/metadata-cleaner"
+keywords = ["metadata", "privacy", "exif", "exiftool", "rust", "desktop"]
+categories = ["command-line-utilities", "filesystem"]
 
 [dependencies]
 iced = { version = "0.12", features = ["tokio", "debug"] }

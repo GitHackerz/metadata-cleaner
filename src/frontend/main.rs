@@ -87,8 +87,23 @@ impl Application for MetadataCleanerApp {
         let db = Arc::new(Database::new(db_path).expect("Failed to initialize database"));
         let preferences = db.get_preferences().unwrap_or_default();
         let exiftool_available = ExifTool::check_availability();
-        let is_wsl = std::env::var("WSL_DISTRO_NAME").is_ok()
-            || std::env::var("WSLENV").is_ok();
+
+        // Detect WSL more robustly: only consider WSL when running on Linux
+        // and either the common WSL env vars are present or /proc/version
+        // contains "microsoft". This prevents false-positive detection
+        // on Windows where those env vars might be set.
+        let is_wsl = if cfg!(target_os = "linux") {
+            if std::env::var("WSL_DISTRO_NAME").is_ok() || std::env::var("WSLENV").is_ok() {
+                true
+            } else {
+                match std::fs::read_to_string("/proc/version") {
+                    Ok(s) => s.to_lowercase().contains("microsoft"),
+                    Err(_) => false,
+                }
+            }
+        } else {
+            false
+        };
 
         if is_wsl {
             info!("Running inside WSL - native file picker unavailable, use path text box.");
