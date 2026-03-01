@@ -105,6 +105,6 @@ src/
 | `thiserror` | Structured error types |
 | `log` + `env_logger` | Logging |
 
-## License
+## Privacy
 
-[MIT](LICENSE)
+This app removes metadata tags (EXIF, XMP, IPTC, GPS, etc.) from supported file types using ExifTool. It does not alter image pixels, remove embedded text in images, or handle steganographically hidden data. Always review files manually for sensitive content before sharing.
