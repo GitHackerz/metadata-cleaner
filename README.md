@@ -108,3 +108,22 @@ src/
 ## Privacy
 
 This app removes metadata tags (EXIF, XMP, IPTC, GPS, etc.) from supported file types using ExifTool. It does not alter image pixels, remove embedded text in images, or handle steganographically hidden data. Always review files manually for sensitive content before sharing.
+
+## Release
+
+This repository has an initial public release `v1.0.0` available as a Git tag. Release artifacts (binaries) are provided on the GitHub Releases page for convenience.
+
+- Tag: `v1.0.0`
+- Notes: Initial public release — metadata cleaning desktop app. Requires ExifTool.
+- Example SHA256 (Windows zip): `123DD321D19DF91A3866492403E65C83353C9B7C8A436C84ED13F5F08F1F5D6E`
+
+To create a local release tag and push it to GitHub:
+
+```bash
+# create annotated tag
+git tag -a v1.0.0 -m "Release v1.0.0"
+# push the tag to origin
+git push origin v1.0.0
+```
+
+Once the tag is pushed the CI workflow will build release artifacts and publish them as release assets (if configured). You can also create a release manually on GitHub and upload built binaries.
