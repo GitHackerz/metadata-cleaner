@@ -1,0 +1,7 @@
+[advisories]
+ignore = [
+    "RUSTSEC-2026-0007",  # bytes integer overflow - indirect via iced
+    "RUSTSEC-2024-0384",  # instant unmaintained - indirect via iced
+    "RUSTSEC-2024-0436",  # paste unmaintained - indirect via iced
+    "RUSTSEC-2026-0002",  # lru unsound - indirect via iced
+]
