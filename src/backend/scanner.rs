@@ -1,8 +1,8 @@
-use walkdir::WalkDir;
-use tokio::sync::{mpsc, watch};
 use crate::backend::models::{FileRecord, FileStatus};
+use log::{debug, warn};
+use tokio::sync::{mpsc, watch};
 use uuid::Uuid;
-use log::{warn, debug};
+use walkdir::WalkDir;
 
 #[derive(Debug)]
 pub enum ScannerMessage {
@@ -58,7 +58,10 @@ impl Scanner {
                                         status: FileStatus::Scanned,
                                     };
 
-                                    if tx.blocking_send(ScannerMessage::FoundFile(file_record)).is_err() {
+                                    if tx
+                                        .blocking_send(ScannerMessage::FoundFile(file_record))
+                                        .is_err()
+                                    {
                                         return; // Receiver dropped — app is shutting down
                                     }
                                     total_files += 1;
@@ -95,28 +98,44 @@ mod tests {
     #[test]
     fn supported_image_extensions() {
         for ext in &["jpg", "jpeg", "png", "gif", "tiff", "webp"] {
-            assert!(Scanner::is_supported_extension(ext), "{} should be supported", ext);
+            assert!(
+                Scanner::is_supported_extension(ext),
+                "{} should be supported",
+                ext
+            );
         }
     }
 
     #[test]
     fn supported_document_extensions() {
         for ext in &["pdf", "docx", "xlsx", "pptx"] {
-            assert!(Scanner::is_supported_extension(ext), "{} should be supported", ext);
+            assert!(
+                Scanner::is_supported_extension(ext),
+                "{} should be supported",
+                ext
+            );
         }
     }
 
     #[test]
     fn supported_media_extensions() {
         for ext in &["mp3", "wav", "flac", "mp4", "mov", "avi", "mkv"] {
-            assert!(Scanner::is_supported_extension(ext), "{} should be supported", ext);
+            assert!(
+                Scanner::is_supported_extension(ext),
+                "{} should be supported",
+                ext
+            );
         }
     }
 
     #[test]
     fn unsupported_extensions_rejected() {
         for ext in &["txt", "rs", "toml", "exe", "zip", "tar", "html", "xml"] {
-            assert!(!Scanner::is_supported_extension(ext), "{} should NOT be supported", ext);
+            assert!(
+                !Scanner::is_supported_extension(ext),
+                "{} should NOT be supported",
+                ext
+            );
         }
     }
 

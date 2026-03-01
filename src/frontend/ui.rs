@@ -1,13 +1,13 @@
-use iced::widget::{container, text, button};
-use iced::{Element, Length, Theme, Background};
 use iced::theme;
+use iced::widget::{button, container, text};
+use iced::{Background, Element, Length, Theme};
 
 pub fn header<'a, Message: 'a>(title: &str) -> Element<'a, Message> {
     container(
         text(title)
             .size(20)
             .width(Length::Fill)
-            .horizontal_alignment(iced::alignment::Horizontal::Center)
+            .horizontal_alignment(iced::alignment::Horizontal::Center),
     )
     .padding(10)
     .style(theme::Container::Custom(Box::new(HeaderStyle)))

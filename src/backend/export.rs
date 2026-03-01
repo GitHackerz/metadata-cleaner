@@ -81,7 +81,11 @@ mod tests {
         let content = fs::read_to_string(&tmp_path).unwrap();
         // header row + 2 data rows
         let lines: Vec<&str> = content.lines().collect();
-        assert!(lines.len() >= 3, "expected header + 2 rows, got {}", lines.len());
+        assert!(
+            lines.len() >= 3,
+            "expected header + 2 rows, got {}",
+            lines.len()
+        );
         let _ = fs::remove_file(tmp_path);
     }
 

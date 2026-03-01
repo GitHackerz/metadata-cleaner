@@ -1,7 +1,7 @@
-pub mod error;
-pub mod models;
 pub mod db;
-pub mod scanner;
+pub mod error;
 pub mod exiftool;
-pub mod logger;
 pub mod export;
+pub mod logger;
+pub mod models;
+pub mod scanner;

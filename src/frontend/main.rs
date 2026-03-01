@@ -1,19 +1,19 @@
-use iced::{Application, Command, Element, Theme, Subscription};
-use iced::widget::{column, row, button};
-use iced::executor;
-use std::path::PathBuf;
-use tokio::sync::{mpsc, watch};
-use std::sync::Arc;
-use log::{info, error, warn};
 use chrono::Local;
+use iced::executor;
+use iced::widget::{button, column, row};
+use iced::{Application, Command, Element, Subscription, Theme};
+use log::{error, info, warn};
+use std::path::PathBuf;
+use std::sync::Arc;
+use tokio::sync::{mpsc, watch};
 use uuid::Uuid;
 
-use crate::backend::models::{FileRecord, ScanRecord, UserPreferences, ScanStatus, FileStatus};
 use crate::backend::db::Database;
-use crate::backend::scanner::{Scanner, ScannerMessage};
 use crate::backend::exiftool::ExifTool;
-use crate::frontend::pages::{scanner_page, history_page};
+use crate::backend::models::{FileRecord, FileStatus, ScanRecord, ScanStatus, UserPreferences};
+use crate::backend::scanner::{Scanner, ScannerMessage};
 use crate::frontend::components::{file_list, settings_panel};
+use crate::frontend::pages::{history_page, scanner_page};
 
 #[derive(Debug, Clone)]
 pub struct CleanResult {
@@ -116,11 +116,13 @@ impl Application for MetadataCleanerApp {
         }
 
         let status_text = if is_wsl {
-            "WSL detected - type a folder path in the box and press Enter or click Scan.".to_string()
+            "WSL detected - type a folder path in the box and press Enter or click Scan."
+                .to_string()
         } else if exiftool_available {
             "Ready - drag a folder here or click Browse.".to_string()
         } else {
-            "ExifTool not found - install it from https://exiftool.org to enable cleaning.".to_string()
+            "ExifTool not found - install it from https://exiftool.org to enable cleaning."
+                .to_string()
         };
 
         let initial_path = preferences.last_scan_path.clone().unwrap_or_default();
@@ -194,7 +196,9 @@ impl Application for MetadataCleanerApp {
                         &scan_id,
                         &ScanStatus::Failed("Cancelled by user".into()),
                     );
-                    let _ = self.db.update_scan_totals(&scan_id, self.files.len() as i32, 0);
+                    let _ = self
+                        .db
+                        .update_scan_totals(&scan_id, self.files.len() as i32, 0);
                 }
                 Command::none()
             }
@@ -219,9 +223,7 @@ impl Application for MetadataCleanerApp {
                     )
                 }
 
-                scanner_page::ScannerPageMessage::CancelScan => {
-                    self.update(Message::CancelScan)
-                }
+                scanner_page::ScannerPageMessage::CancelScan => self.update(Message::CancelScan),
 
                 scanner_page::ScannerPageMessage::PathInputChanged(val) => {
                     self.path_input = val;
@@ -436,7 +438,8 @@ impl Application for MetadataCleanerApp {
                                 }
 
                                 if let Err(e) =
-                                    self.db.update_file_status(&result.file_id, &new_status, None)
+                                    self.db
+                                        .update_file_status(&result.file_id, &new_status, None)
                                 {
                                     warn!("DB update_file_status failed: {}", e);
                                 }

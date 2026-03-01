@@ -1,8 +1,8 @@
-use iced::widget::{column, row, text, text_input, container};
-use iced::{Element, Length, Alignment, Color};
 use crate::backend::models::{FileRecord, UserPreferences};
 use crate::frontend::components::{file_list, progress_bar, settings_panel};
 use crate::frontend::ui;
+use iced::widget::{column, container, row, text, text_input};
+use iced::{Alignment, Color, Element, Length};
 
 #[derive(Debug, Clone)]
 pub enum ScannerPageMessage {
@@ -32,15 +32,17 @@ pub fn view<'a>(
 ) -> Element<'a, ScannerPageMessage> {
     let header = ui::header("Metadata Scanner");
 
-    let file_list_view = file_list::view(files, selected_file_id)
-        .map(ScannerPageMessage::FileList);
+    let file_list_view = file_list::view(files, selected_file_id).map(ScannerPageMessage::FileList);
 
-    let settings_view = settings_panel::view(prefs)
-        .map(ScannerPageMessage::Settings);
+    let settings_view = settings_panel::view(prefs).map(ScannerPageMessage::Settings);
 
     // ----- Toolbar buttons -----
     // On WSL the XDG portal is unavailable — user must type path manually
-    let browse_label = if is_wsl { "Browse (N/A)" } else { "Browse\u{2026}" };
+    let browse_label = if is_wsl {
+        "Browse (N/A)"
+    } else {
+        "Browse\u{2026}"
+    };
     let select_btn = if is_wsl {
         ui::primary_button(browse_label) // no on_press = disabled
     } else {

@@ -1,7 +1,7 @@
-use iced::widget::{column, row, text, scrollable, button, container};
-use iced::{Element, Length, Color};
 use crate::backend::models::{ScanRecord, ScanStatus};
 use crate::frontend::ui;
+use iced::widget::{button, column, container, row, scrollable, text};
+use iced::{Color, Element, Length};
 
 #[derive(Debug, Clone)]
 pub enum HistoryPageMessage {
@@ -9,9 +9,7 @@ pub enum HistoryPageMessage {
     ViewScan(String),
 }
 
-pub fn view<'a>(
-    history: &'a [ScanRecord],
-) -> Element<'a, HistoryPageMessage> {
+pub fn view<'a>(history: &'a [ScanRecord]) -> Element<'a, HistoryPageMessage> {
     let header = ui::header("Scan History");
 
     let list = if history.is_empty() {
@@ -42,9 +40,7 @@ pub fn view<'a>(
                             text(scan.timestamp.format("%Y-%m-%d %H:%M:%S").to_string())
                                 .size(13)
                                 .width(Length::Fixed(180.0)),
-                            text(&scan.root_path)
-                                .size(13)
-                                .width(Length::Fill),
+                            text(&scan.root_path).size(13).width(Length::Fill),
                             text(format!("{} files", scan.total_files))
                                 .size(13)
                                 .width(Length::Fixed(80.0)),

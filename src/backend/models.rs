@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Local};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScanRecord {
@@ -116,4 +116,3 @@ mod tests {
         assert!(json.contains("\"metadata\":null"));
     }
 }
-

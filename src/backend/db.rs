@@ -1,8 +1,8 @@
+use crate::backend::models::{FileRecord, FileStatus, ScanRecord, ScanStatus, UserPreferences};
+use chrono::{DateTime, Local};
 use rusqlite::{params, Connection, Result};
 use std::path::Path;
 use std::sync::Mutex;
-use crate::backend::models::{ScanRecord, FileRecord, UserPreferences, ScanStatus, FileStatus};
-use chrono::{DateTime, Local};
 
 pub struct Database {
     conn: Mutex<Connection>,
@@ -11,7 +11,9 @@ pub struct Database {
 impl Database {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let conn = Connection::open(path)?;
-        let db = Self { conn: Mutex::new(conn) };
+        let db = Self {
+            conn: Mutex::new(conn),
+        };
         db.init()?;
         Ok(db)
     }
@@ -185,7 +187,12 @@ impl Database {
     }
 
     /// Update total_files and cleaned_files counts for a scan.
-    pub fn update_scan_totals(&self, scan_id: &str, total_files: i32, cleaned_files: i32) -> Result<()> {
+    pub fn update_scan_totals(
+        &self,
+        scan_id: &str,
+        total_files: i32,
+        cleaned_files: i32,
+    ) -> Result<()> {
         let conn = self.conn.lock().unwrap();
         conn.execute(
             "UPDATE scans SET total_files = ?1, cleaned_files = ?2 WHERE id = ?3",
@@ -195,7 +202,12 @@ impl Database {
     }
 
     /// Update the status (and optionally the metadata JSON) of a single file record.
-    pub fn update_file_status(&self, file_id: &str, status: &FileStatus, metadata: Option<&str>) -> Result<()> {
+    pub fn update_file_status(
+        &self,
+        file_id: &str,
+        status: &FileStatus,
+        metadata: Option<&str>,
+    ) -> Result<()> {
         let conn = self.conn.lock().unwrap();
         let status_str = serde_json::to_string(status).unwrap_or_default();
         conn.execute(
@@ -241,14 +253,16 @@ impl Database {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::backend::models::{ScanStatus, FileStatus, UserPreferences};
+    use crate::backend::models::{FileStatus, ScanStatus, UserPreferences};
     use chrono::Local;
     use uuid::Uuid;
 
     fn make_db() -> Database {
         // Use an in-memory SQLite database for tests
         let conn = Connection::open_in_memory().expect("open in-memory DB");
-        let db = Database { conn: Mutex::new(conn) };
+        let db = Database {
+            conn: Mutex::new(conn),
+        };
         db.init().expect("init schema");
         db
     }
@@ -309,7 +323,8 @@ mod tests {
         let scan = make_scan("/tmp/music");
         db.save_scan(&scan).expect("save scan");
 
-        db.update_scan_totals(&scan.id, 42, 10).expect("update totals");
+        db.update_scan_totals(&scan.id, 42, 10)
+            .expect("update totals");
 
         let scans = db.get_recent_scans(1).expect("get scans");
         assert_eq!(scans[0].total_files, 42);
