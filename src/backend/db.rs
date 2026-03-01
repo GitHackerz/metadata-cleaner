@@ -1,25 +1,27 @@
 use rusqlite::{params, Connection, Result};
 use std::path::Path;
+use std::sync::Mutex;
 use crate::backend::models::{ScanRecord, FileRecord, UserPreferences, ScanStatus, FileStatus};
 use chrono::{DateTime, Local};
 
 pub struct Database {
-    conn: Connection,
+    conn: Mutex<Connection>,
 }
 
 impl Database {
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self> {
         let conn = Connection::open(path)?;
-        let db = Self { conn };
+        let db = Self { conn: Mutex::new(conn) };
         db.init()?;
         Ok(db)
     }
 
     fn init(&self) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
         // Enable WAL mode for better concurrent read performance
-        self.conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;")?;
+        conn.execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL;")?;
 
-        self.conn.execute(
+        conn.execute(
             "CREATE TABLE IF NOT EXISTS scans (
                 id TEXT PRIMARY KEY,
                 timestamp TEXT NOT NULL,
@@ -32,12 +34,12 @@ impl Database {
             [],
         )?;
 
-        self.conn.execute(
+        conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_scans_timestamp ON scans(timestamp DESC)",
             [],
         )?;
 
-        self.conn.execute(
+        conn.execute(
             "CREATE TABLE IF NOT EXISTS files (
                 id TEXT PRIMARY KEY,
                 scan_id TEXT NOT NULL,
@@ -50,12 +52,12 @@ impl Database {
             [],
         )?;
 
-        self.conn.execute(
+        conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_files_scan_id ON files(scan_id)",
             [],
         )?;
 
-        self.conn.execute(
+        conn.execute(
             "CREATE TABLE IF NOT EXISTS preferences (
                 id INTEGER PRIMARY KEY CHECK (id = 1),
                 recursive_default INTEGER NOT NULL,
@@ -70,8 +72,9 @@ impl Database {
     }
 
     pub fn save_scan(&self, scan: &ScanRecord) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
         let status_str = serde_json::to_string(&scan.status).unwrap_or_default();
-        self.conn.execute(
+        conn.execute(
             "INSERT OR REPLACE INTO scans (id, timestamp, root_path, recursive, total_files, cleaned_files, status)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             params![
@@ -88,8 +91,9 @@ impl Database {
     }
 
     pub fn save_file(&self, file: &FileRecord) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
         let status_str = serde_json::to_string(&file.status).unwrap_or_default();
-        self.conn.execute(
+        conn.execute(
             "INSERT OR REPLACE INTO files (id, scan_id, path, file_type, metadata, status)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
             params![
@@ -105,7 +109,8 @@ impl Database {
     }
 
     pub fn get_preferences(&self) -> Result<UserPreferences> {
-        let mut stmt = self.conn.prepare("SELECT recursive_default, backup_enabled, theme, last_scan_path FROM preferences WHERE id = 1")?;
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare("SELECT recursive_default, backup_enabled, theme, last_scan_path FROM preferences WHERE id = 1")?;
         let mut rows = stmt.query([])?;
 
         if let Some(row) = rows.next()? {
@@ -121,7 +126,8 @@ impl Database {
     }
 
     pub fn save_preferences(&self, prefs: &UserPreferences) -> Result<()> {
-        self.conn.execute(
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
             "INSERT OR REPLACE INTO preferences (id, recursive_default, backup_enabled, theme, last_scan_path)
              VALUES (1, ?1, ?2, ?3, ?4)",
             params![
@@ -135,7 +141,8 @@ impl Database {
     }
 
     pub fn get_recent_scans(&self, limit: i32) -> Result<Vec<ScanRecord>> {
-        let mut stmt = self.conn.prepare(
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
             "SELECT id, timestamp, root_path, recursive, total_files, cleaned_files, status \
              FROM scans ORDER BY timestamp DESC LIMIT ?1",
         )?;
@@ -168,8 +175,9 @@ impl Database {
 
     /// Update only the status of an existing scan record.
     pub fn update_scan_status(&self, scan_id: &str, status: &ScanStatus) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
         let status_str = serde_json::to_string(status).unwrap_or_default();
-        self.conn.execute(
+        conn.execute(
             "UPDATE scans SET status = ?1 WHERE id = ?2",
             params![status_str, scan_id],
         )?;
@@ -178,7 +186,8 @@ impl Database {
 
     /// Update total_files and cleaned_files counts for a scan.
     pub fn update_scan_totals(&self, scan_id: &str, total_files: i32, cleaned_files: i32) -> Result<()> {
-        self.conn.execute(
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
             "UPDATE scans SET total_files = ?1, cleaned_files = ?2 WHERE id = ?3",
             params![total_files, cleaned_files, scan_id],
         )?;
@@ -187,8 +196,9 @@ impl Database {
 
     /// Update the status (and optionally the metadata JSON) of a single file record.
     pub fn update_file_status(&self, file_id: &str, status: &FileStatus, metadata: Option<&str>) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
         let status_str = serde_json::to_string(status).unwrap_or_default();
-        self.conn.execute(
+        conn.execute(
             "UPDATE files SET status = ?1, metadata = COALESCE(?2, metadata) WHERE id = ?3",
             params![status_str, metadata, file_id],
         )?;
@@ -197,7 +207,8 @@ impl Database {
 
     /// Retrieve all file records associated with a scan.
     pub fn get_files_for_scan(&self, scan_id: &str) -> Result<Vec<FileRecord>> {
-        let mut stmt = self.conn.prepare(
+        let conn = self.conn.lock().unwrap();
+        let mut stmt = conn.prepare(
             "SELECT id, scan_id, path, file_type, metadata, status \
              FROM files WHERE scan_id = ?1 ORDER BY path",
         )?;
@@ -237,7 +248,7 @@ mod tests {
     fn make_db() -> Database {
         // Use an in-memory SQLite database for tests
         let conn = Connection::open_in_memory().expect("open in-memory DB");
-        let db = Database { conn };
+        let db = Database { conn: Mutex::new(conn) };
         db.init().expect("init schema");
         db
     }

@@ -4,9 +4,9 @@ use crate::backend::models::UserPreferences;
 
 #[derive(Debug, Clone)]
 pub enum SettingsMessage {
-    RecursiveChanged(bool),
-    BackupChanged(bool),
-    ThemeChanged(String),
+    RecursiveToggled(bool),
+    BackupToggled(bool),
+    ThemeSelected(String),
 }
 
 pub fn view<'a>(
@@ -16,19 +16,19 @@ pub fn view<'a>(
         "Recursive Scan (Scan subfolders)",
         prefs.recursive_default,
     )
-    .on_toggle(SettingsMessage::RecursiveChanged);
+    .on_toggle(SettingsMessage::RecursiveToggled);
 
     let backup_toggle = checkbox(
         "Create Backup (Keep original files)",
         prefs.backup_enabled,
     )
-    .on_toggle(SettingsMessage::BackupChanged);
+    .on_toggle(SettingsMessage::BackupToggled);
 
     let themes = vec!["light".to_string(), "dark".to_string()];
     let theme_picker = pick_list(
         themes,
         Some(prefs.theme.clone()),
-        SettingsMessage::ThemeChanged,
+        SettingsMessage::ThemeSelected,
     );
 
     container(

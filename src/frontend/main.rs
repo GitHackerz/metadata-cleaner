@@ -84,6 +84,7 @@ impl Application for MetadataCleanerApp {
             .unwrap_or_else(|| PathBuf::from("."))
             .join("metadata_cleaner.db");
 
+        #[allow(clippy::arc_with_non_send_sync)]
         let db = Arc::new(Database::new(db_path).expect("Failed to initialize database"));
         let preferences = db.get_preferences().unwrap_or_default();
         let exiftool_available = ExifTool::check_availability();
@@ -295,13 +296,13 @@ impl Application for MetadataCleanerApp {
 
                 scanner_page::ScannerPageMessage::Settings(settings_msg) => {
                     match settings_msg {
-                        settings_panel::SettingsMessage::RecursiveChanged(val) => {
+                        settings_panel::SettingsMessage::RecursiveToggled(val) => {
                             self.preferences.recursive_default = val;
                         }
-                        settings_panel::SettingsMessage::BackupChanged(val) => {
+                        settings_panel::SettingsMessage::BackupToggled(val) => {
                             self.preferences.backup_enabled = val;
                         }
-                        settings_panel::SettingsMessage::ThemeChanged(val) => {
+                        settings_panel::SettingsMessage::ThemeSelected(val) => {
                             self.preferences.theme = val;
                         }
                     }
